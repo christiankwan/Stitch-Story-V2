@@ -590,6 +590,7 @@ export default function App() {
   const [captureLink, setCaptureLink] = useState('')
   const [captureImage, setCaptureImage] = useState(null)
   const fileInputRef = useRef(null)
+  const importFileRef = useRef(null)
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', !!dark)
@@ -692,7 +693,7 @@ export default function App() {
   }
 
   function exportBackup() {
-    const blob = new Blob([JSON.stringify({ projects, exportedAt: new Date().toISOString() }, null, 2)], {
+    const blob = new Blob([JSON.stringify(projects, null, 2)], {
       type: 'application/json',
     })
     const url = URL.createObjectURL(blob)
@@ -701,6 +702,29 @@ export default function App() {
     a.download = 'stitch-story-backup.json'
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  function handleImportBackup(file) {
+    const reader = new FileReader()
+
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result)
+
+        if (!Array.isArray(data)) {
+          alert('Invalid backup file')
+          return
+        }
+
+        setProjects(data)
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+        alert('Backup imported successfully')
+      } catch {
+        alert('Error importing backup')
+      }
+    }
+
+    reader.readAsText(file)
   }
 
   function resetApp() {
@@ -971,10 +995,34 @@ export default function App() {
                         {dark ? <Sun size={16} /> : <Moon size={16} />}
                       </button>
                     </div>
+
                     <button className="primary-btn button-reset" onClick={exportBackup}>
                       <Upload size={16} /> Export backup
                     </button>
+
+                    <input
+                      ref={importFileRef}
+                      type="file"
+                      accept=".json,application/json"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          handleImportBackup(file)
+                          e.target.value = ''
+                        }
+                      }}
+                    />
+
+                    <button
+                      className="secondary-btn button-reset"
+                      onClick={() => importFileRef.current?.click()}
+                    >
+                      <Upload size={16} /> Import backup
+                    </button>
+
                     <button className="secondary-btn button-reset" onClick={resetApp}>Reset sample data</button>
+
                     <div className="help-box">
                       To save it like an app on iPhone, open it in Safari, tap Share, then tap <strong>Add to Home Screen</strong>.
                     </div>
