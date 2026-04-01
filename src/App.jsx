@@ -8,12 +8,9 @@ import {
   ExternalLink,
   FolderPlus,
   Home,
-  Image as ImageIcon,
-  Link2,
   Moon,
   Pencil,
   Plus,
-  Search,
   Settings,
   Sparkles,
   Sun,
@@ -23,8 +20,8 @@ import {
   X,
 } from 'lucide-react'
 
-const STORAGE_KEY = 'stitch-story-full-v1'
-const DARK_KEY = 'stitch-story-dark-v1'
+const STORAGE_KEY = 'stitch-story-full-v2'
+const DARK_KEY = 'stitch-story-dark-v2'
 
 const seedProjects = [
   {
@@ -253,6 +250,7 @@ function ProjectDetail({
   onDeleteProject,
   onAddResource,
   onEditProject,
+  onAddUpdate,
 }) {
   const [checklistText, setChecklistText] = useState('')
   const [resourceTitle, setResourceTitle] = useState('')
@@ -262,6 +260,20 @@ function ProjectDetail({
   const [editCategory, setEditCategory] = useState(project.category)
   const [editDue, setEditDue] = useState(project.due || '')
   const [editNotes, setEditNotes] = useState(project.notes || '')
+
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [updateType, setUpdateType] = useState('Journal')
+  const [updateTitle, setUpdateTitle] = useState('')
+  const [updateBody, setUpdateBody] = useState('')
+  const [updateLink, setUpdateLink] = useState('')
+  const [updateImage, setUpdateImage] = useState(null)
+  const updateFileRef = useRef(null)
+
+  function readUpdateImage(file) {
+    const reader = new FileReader()
+    reader.onload = () => setUpdateImage(String(reader.result))
+    reader.readAsDataURL(file)
+  }
 
   useEffect(() => {
     setEditName(project.name)
@@ -298,7 +310,11 @@ function ProjectDetail({
         <div className="section-title"><Target size={18} /> Checklist</div>
         <div className="stack">
           {project.checklist.map((item) => (
-            <button key={item.id} className="check-item button-reset" onClick={() => onToggleChecklist(item.id)}>
+            <button
+              key={item.id}
+              className="check-item button-reset"
+              onClick={() => onToggleChecklist(item.id)}
+            >
               {item.done ? <Check size={16} className="done-icon" /> : <Circle size={16} className="icon-muted" />}
               <span>{item.title}</span>
             </button>
@@ -326,13 +342,26 @@ function ProjectDetail({
       </GlassCard>
 
       <GlassCard>
-        <div className="section-title"><Camera size={18} /> Timeline</div>
+        <div className="row between start">
+          <div className="section-title"><Camera size={18} /> Timeline</div>
+          <button
+            className="secondary-btn button-reset"
+            onClick={() => setShowUpdateModal(true)}
+          >
+            <Plus size={16} /> Add Update
+          </button>
+        </div>
+
         <div className="stack">
           {project.updates.length === 0 ? (
-            <div className="empty-note">No updates yet. Add one from the Add tab.</div>
+            <div className="empty-note">No updates yet. Add one below.</div>
           ) : (
             project.updates.map((update) => (
-              <UpdateCard key={update.id} update={update} onDelete={() => onDeleteUpdate(update.id)} />
+              <UpdateCard
+                key={update.id}
+                update={update}
+                onDelete={() => onDeleteUpdate(update.id)}
+              />
             ))
           )}
         </div>
@@ -342,7 +371,13 @@ function ProjectDetail({
         <div className="section-title"><Sparkles size={18} /> Linked tips</div>
         <div className="stack">
           {project.resources.map((resource) => (
-            <a key={resource.id} href={resource.url} target="_blank" rel="noreferrer" className="resource-link">
+            <a
+              key={resource.id}
+              href={resource.url}
+              target="_blank"
+              rel="noreferrer"
+              className="resource-link"
+            >
               <div>
                 <div className="resource-title">{resource.title}</div>
                 <div className="tiny">{resource.url}</div>
@@ -352,8 +387,18 @@ function ProjectDetail({
           ))}
         </div>
         <div className="stack mt-16">
-          <input className="input" value={resourceTitle} onChange={(e) => setResourceTitle(e.target.value)} placeholder="Tip title" />
-          <input className="input" value={resourceUrl} onChange={(e) => setResourceUrl(e.target.value)} placeholder="https://..." />
+          <input
+            className="input"
+            value={resourceTitle}
+            onChange={(e) => setResourceTitle(e.target.value)}
+            placeholder="Tip title"
+          />
+          <input
+            className="input"
+            value={resourceUrl}
+            onChange={(e) => setResourceUrl(e.target.value)}
+            placeholder="https://..."
+          />
           <button
             className="primary-btn button-reset"
             onClick={() => {
@@ -372,16 +417,36 @@ function ProjectDetail({
 
       <Modal open={editing} title="Edit Project" onClose={() => setEditing(false)}>
         <div className="stack">
-          <input className="input" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Project name" />
-          <select className="input" value={editCategory} onChange={(e) => setEditCategory(e.target.value)}>
+          <input
+            className="input"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            placeholder="Project name"
+          />
+          <select
+            className="input"
+            value={editCategory}
+            onChange={(e) => setEditCategory(e.target.value)}
+          >
             <option>Garment</option>
             <option>Accessory</option>
             <option>Mending</option>
             <option>Quilting</option>
             <option>Other</option>
           </select>
-          <input className="input" type="date" value={editDue} onChange={(e) => setEditDue(e.target.value)} />
-          <textarea className="input textarea" rows="5" value={editNotes} onChange={(e) => setEditNotes(e.target.value)} placeholder="Notes" />
+          <input
+            className="input"
+            type="date"
+            value={editDue}
+            onChange={(e) => setEditDue(e.target.value)}
+          />
+          <textarea
+            className="input textarea"
+            rows="5"
+            value={editNotes}
+            onChange={(e) => setEditNotes(e.target.value)}
+            placeholder="Notes"
+          />
           <button
             className="primary-btn button-reset"
             onClick={() => {
@@ -395,6 +460,107 @@ function ProjectDetail({
             }}
           >
             Save Changes
+          </button>
+        </div>
+      </Modal>
+
+      <Modal open={showUpdateModal} title="Add Update" onClose={() => setShowUpdateModal(false)}>
+        <div className="stack">
+          <select
+            className="input"
+            value={updateType}
+            onChange={(e) => setUpdateType(e.target.value)}
+          >
+            <option>Journal</option>
+            <option>Photo</option>
+            <option>Note</option>
+          </select>
+
+          <input
+            className="input"
+            value={updateTitle}
+            onChange={(e) => setUpdateTitle(e.target.value)}
+            placeholder="Update title"
+          />
+
+          <textarea
+            className="input textarea"
+            rows="5"
+            value={updateBody}
+            onChange={(e) => setUpdateBody(e.target.value)}
+            placeholder="What happened today?"
+          />
+
+          <input
+            className="input"
+            value={updateLink}
+            onChange={(e) => setUpdateLink(e.target.value)}
+            placeholder="https://..."
+          />
+
+          <input
+            ref={updateFileRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) readUpdateImage(file)
+            }}
+          />
+
+          {updateImage ? (
+            <div className="stack">
+              <img src={updateImage} alt="Preview" className="update-image" />
+              <div className="row gap-8">
+                <button
+                  className="secondary-btn button-reset"
+                  onClick={() => updateFileRef.current?.click()}
+                >
+                  <Upload size={16} /> Replace
+                </button>
+                <button
+                  className="secondary-btn button-reset"
+                  onClick={() => setUpdateImage(null)}
+                >
+                  <X size={16} /> Remove
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              className="secondary-btn button-reset"
+              onClick={() => updateFileRef.current?.click()}
+            >
+              <Camera size={16} /> Add Photo
+            </button>
+          )}
+
+          <button
+            className="primary-btn button-reset"
+            onClick={() => {
+              if (!updateTitle.trim()) return
+
+              onAddUpdate({
+                id: crypto.randomUUID(),
+                type: updateType,
+                title: updateTitle.trim(),
+                body: updateBody.trim(),
+                date: new Date().toISOString().slice(0, 10),
+                image: updateImage,
+                link: updateLink.trim(),
+              })
+
+              setUpdateType('Journal')
+              setUpdateTitle('')
+              setUpdateBody('')
+              setUpdateLink('')
+              setUpdateImage(null)
+              setShowUpdateModal(false)
+            }}
+          >
+            Save Update
           </button>
         </div>
       </Modal>
@@ -601,6 +767,15 @@ export default function App() {
               setProjects((prev) =>
                 prev.map((project) =>
                   project.id === selectedProject.id ? calculateProject({ ...project, ...payload }) : project,
+                ),
+              )
+            }}
+            onAddUpdate={(newUpdate) => {
+              setProjects((prev) =>
+                prev.map((project) =>
+                  project.id === selectedProject.id
+                    ? { ...project, updates: [newUpdate, ...project.updates] }
+                    : project,
                 ),
               )
             }}
