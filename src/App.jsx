@@ -610,7 +610,7 @@ export default function App() {
             {tab === 'home' && (
               <div className="screen">
                 <TopBar
-                  title="My Studio"
+                  title="Jada's Sewing Journal"
                   subtitle="Track your sewing projects, progress photos, notes, and helpful links in one place."
                   right={
                     <button className="icon-toggle button-reset" onClick={() => setDark(!dark)}>
@@ -619,7 +619,7 @@ export default function App() {
                   }
                 />
                 <GlassCard className="hero-card">
-                  <div className="tiny">Stitch Story</div>
+                  <div className="tiny">Jada's Sewing Journal</div>
                   <div className="hero-subtitle">A sewing journal that actually lets you do things.</div>
                   <div className="stats-grid">
                     <Stat label="Projects" value={projects.length} />
